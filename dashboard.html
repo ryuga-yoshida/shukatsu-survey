@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>就活アンケート 集計 | 就活ナビ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy: #1B2A5E; --navy-deep: #101A3D; --navy-pale: #EAEEFB;
+    --teal: #17A6A0; --teal-pale: #E4F7F6; --teal-ink: #0E6F6B;
+    --ink: #172033; --ink-soft: #5B6478; --ink-faint: #8A93A8;
+    --bg: #F4F6FB; --white: #fff; --line: #E1E5F0; --warn: #C98A1B; --warn-pale: #FFF4DC;
+    --font-display: 'M PLUS 1p', sans-serif; --font-body: 'Noto Sans JP', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.7; }
+  button, input, select, textarea { font-family: inherit; font-size: inherit; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px; }
+
+  .topbar { background: var(--navy-deep); color: #fff; position: sticky; top: 0; z-index: 30; }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 58px; }
+  .topbar .logo { font-family: var(--font-display); font-weight: 900; font-size: 16px; display: flex; align-items: center; gap: 12px; }
+  .topbar .logo span { font-size: 11px; color: #9FB0F0; letter-spacing: .1em; font-weight: 700; }
+  .topbar .right { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #C5CDF0; }
+  .btn { font-family: var(--font-display); font-weight: 700; font-size: 13px; padding: 8px 14px; border-radius: 8px; border: 1.5px solid transparent; cursor: pointer; background: var(--teal); color: #fff; transition: background .15s; }
+  .btn:hover { background: #12908B; }
+  .btn.ghost { background: transparent; color: #C5CDF0; border-color: rgba(255,255,255,.25); }
+  .btn.ghost:hover { color: #fff; border-color: #fff; background: transparent; }
+  .btn.light { background: var(--navy-pale); color: var(--navy); }
+  .btn.light:hover { background: #DDE3F7; }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  .banner { background: var(--warn-pale); border-bottom: 1px solid #F1DFAF; color: #6B4A05; font-size: 13px; }
+  .banner .wrap { padding-block: 8px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .banner[hidden] { display: none; }
+
+  .settings { background: var(--white); border-bottom: 1px solid var(--line); }
+  .settings[hidden] { display: none; }
+  .settings .wrap { padding-block: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  .settings label { font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--ink-soft); display: block; margin-bottom: 4px; }
+  .field { width: 100%; padding: 9px 12px; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; }
+  .field:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-pale); }
+  .settings .actions { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .settings .hint { grid-column: 1 / -1; font-size: 12px; color: var(--ink-faint); }
+  @media (max-width: 720px) { .settings .wrap { grid-template-columns: 1fr; } }
+
+  .filters { background: var(--white); border-bottom: 1px solid var(--line); position: sticky; top: 58px; z-index: 20; }
+  .filters .wrap { padding-block: 10px; display: flex; gap: 8px 18px; flex-wrap: wrap; align-items: center; }
+  .filters .grp { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .filters .grp b { font-family: var(--font-display); font-size: 12px; color: var(--ink-soft); margin-right: 2px; }
+  .chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1.5px solid var(--line); background: #fff; cursor: pointer; color: var(--ink-soft); transition: all .15s; }
+  .chip.is-on { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .filters .n { margin-left: auto; font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--navy); }
+  .filters .clear { font-size: 12px; color: var(--ink-faint); background: none; border: none; cursor: pointer; text-decoration: underline; }
+
+  main { padding-block: 22px 60px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 22px; }
+  .kpi { background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .kpi .l { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; color: var(--ink-soft); letter-spacing: .04em; }
+  .kpi .v { font-family: var(--font-display); font-size: 30px; font-weight: 900; color: var(--navy); line-height: 1.2; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .kpi .v small { font-size: 14px; color: var(--ink-faint); font-weight: 700; margin-left: 2px; }
+  .kpi .s { font-size: 12px; color: var(--ink-faint); margin-top: 2px; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .card { background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; min-width: 0; }
+  .card.wide { grid-column: 1 / -1; }
+  .card h3 { font-family: var(--font-display); font-size: 14.5px; font-weight: 700; color: var(--ink); line-height: 1.5; display: flex; gap: 8px; align-items: baseline; }
+  .card h3 .qn { font-size: 11px; color: var(--teal-ink); letter-spacing: .08em; flex-shrink: 0; }
+  .card .sub { font-size: 12px; color: var(--ink-faint); margin-top: 2px; }
+  .card .n { font-size: 11.5px; color: var(--ink-faint); font-family: var(--font-display); font-weight: 700; margin-left: auto; white-space: nowrap; }
+  .chart { position: relative; margin-top: 12px; }
+  .section-title { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: .14em; color: var(--teal-ink); margin: 28px 0 10px; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } .filters { position: static; } }
+
+  table.tbl { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+  table.tbl th, table.tbl td { padding: 8px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  table.tbl th { font-family: var(--font-display); font-size: 11.5px; color: var(--ink-soft); font-weight: 700; }
+  table.tbl td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .score { display: inline-block; font-family: var(--font-display); font-weight: 900; padding: 1px 8px; border-radius: 6px; background: var(--navy-pale); color: var(--navy); }
+  .dist { display: inline-flex; height: 10px; width: 120px; border-radius: 4px; overflow: hidden; vertical-align: middle; background: #EEF0F7; }
+  .dist i { display: block; height: 100%; }
+  .tbl-wrap { overflow-x: auto; }
+
+  .texts { list-style: none; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow: auto; }
+  .texts li { background: #F8F9FD; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; font-size: 13px; }
+  .texts li .m { display: block; font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+  .texts .empty { color: var(--ink-faint); font-size: 13px; border: 1px dashed var(--line); background: none; text-align: center; }
+
+  .cross-ctl { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+  .cross-ctl select { padding: 7px 10px; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; max-width: 100%; }
+  .legend-note { font-size: 11.5px; color: var(--ink-faint); margin-top: 6px; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
+  .empty-state h2 { font-family: var(--font-display); font-size: 20px; color: var(--navy); margin-bottom: 8px; }
+  .empty-state[hidden] { display: none; }
+  #content[hidden] { display: none; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--navy-deep); color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 50; }
+  .toast.is-on { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="logo">就活ナビ <span>SURVEY DASHBOARD</span></div>
+    <div class="right">
+      <span id="status">未接続</span>
+      <button class="btn ghost" id="toggleSettings">設定</button>
+      <button class="btn ghost" id="exportBtn" title="現在のフィルタで絞った回答をCSVで保存">CSV</button>
+      <button class="btn" id="refreshBtn">更新</button>
+    </div>
+  </div>
+</div>
+
+<div class="banner" id="sampleBanner" hidden><div class="wrap">⚠︎ <b>サンプルデータ</b>を表示しています（架空の回答60件）。実データを見るには「設定」でApps ScriptのURLと合言葉を入力してください。</div></div>
+
+<section class="settings" id="settings" hidden>
+  <div class="wrap">
+    <div><label for="epInput">Apps Script ウェブアプリURL（…/exec）</label><input class="field" id="epInput" type="url" placeholder="https://script.google.com/macros/s/.../exec"></div>
+    <div><label for="keyInput">読み取り用の合言葉（Code.gs の READ_KEY）</label><input class="field" id="keyInput" type="password" placeholder="READ_KEY"></div>
+    <div class="actions">
+      <button class="btn" id="saveSettings">保存して読み込む</button>
+      <button class="btn light" id="loadSample">サンプルデータで見る</button>
+      <button class="btn light" id="loadFile">JSON/CSVファイルから読む</button>
+      <input type="file" id="fileInput" accept=".json,.csv" hidden>
+    </div>
+    <div class="hint">URLと合言葉はこのブラウザにだけ保存されます。回答データの取得は GET /exec?key=… で行います。</div>
+  </div>
+</section>
+
+<div class="filters" id="filters" hidden>
+  <div class="wrap">
+    <div class="grp" data-f="q0"><b>学年</b></div>
+    <div class="grp" data-f="faculty"><b>学部</b></div>
+    <div class="grp" data-f="q1"><b>進捗</b></div>
+    <div class="grp" data-f="q3"><b>気持ち</b></div>
+    <button class="clear" id="clearFilters">絞り込み解除</button>
+    <div class="n"><span id="nShown">0</span> / <span id="nAll">0</span> 件</div>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="empty-state" id="empty">
+    <h2>まだデータがありません</h2>
+    <p>右上の「設定」からApps ScriptのURLと合言葉を入力すると、シートの回答を読み込みます。<br>先に見た目を確認したい場合は「サンプルデータで見る」を押してください。</p>
+  </div>
+  <div id="content" hidden>
+    <div class="kpis" id="kpis"></div>
+    <div id="sections"></div>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="questions.js"></script>
+<script>
+(function () {
+  var S = window.SURVEY_SCHEMA, CFG = window.SURVEY_CONFIG || {};
+  var OTHER = "その他";
+  var LS = { ep: "shukatsu-dash-ep", key: "shukatsu-dash-key" };
+  var all = [], shown = [], charts = [], isSample = false;
+  var filters = { q0: [], faculty: [], q1: [], q3: [] };
+  var $ = function (id) { return document.getElementById(id); };
+  var Q = {}; S.questions.forEach(function (q) { Q[q.id] = q; });
+
+  var C = { navy: "#1B2A5E", teal: "#17A6A0", blue: "#3E5AC7", sky: "#8FA8FF", mint: "#5EE6DD", grey: "#C9CFE0", ink: "#172033", soft: "#5B6478" };
+  var SEQ = ["#D9E3F5", "#8FA8FF", "#3E5AC7", "#1B2A5E"]; // matrix 4段階
+  var CAT = [C.navy, C.teal, C.blue, C.sky, C.mint, "#F2A65A", "#D1495B", "#7B6CF6", C.grey];
+  Chart.defaults.font.family = "'Noto Sans JP', sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = C.soft;
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function pct(n, d) { return d ? Math.round(n / d * 100) : 0; }
+  var toastTimer; function toast(m) { $("toast").textContent = m; $("toast").classList.add("is-on"); clearTimeout(toastTimer); toastTimer = setTimeout(function () { $("toast").classList.remove("is-on"); }, 2800); }
+  function get(k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }
+  function set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  // ---------- data loading ----------
+  function endpoint() { return get(LS.ep) || CFG.endpoint || ""; }
+  function load() {
+    var ep = endpoint(), key = get(LS.key);
+    if (!ep || !key) { $("status").textContent = "未接続"; return Promise.resolve(false); }
+    $("status").textContent = "読み込み中…"; $("refreshBtn").disabled = true;
+    return fetch(ep + (ep.indexOf("?") >= 0 ? "&" : "?") + "key=" + encodeURIComponent(key) + "&t=" + Date.now())
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.error || "error");
+        isSample = false; $("sampleBanner").hidden = true;
+        setData(j.responses || []);
+        $("status").textContent = "更新 " + new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+        return true;
+      })
+      .catch(function (e) { console.error(e); $("status").textContent = "取得エラー"; toast("読み込めませんでした：" + (e.message === "unauthorized" ? "合言葉が違います" : "URLと公開設定を確認してください")); return false; })
+      .finally(function () { $("refreshBtn").disabled = false; });
+  }
+  function setData(rows) {
+    all = rows.filter(function (r) { return r && r.answers; }).sort(function (a, b) { return (a.submittedAt || "") < (b.submittedAt || "") ? 1 : -1; });
+    buildFilterChips(); applyFilters();
+  }
+
+  // ---------- filters ----------
+  function buildFilterChips() {
+    Object.keys(filters).forEach(function (qid) {
+      var grp = document.querySelector('.grp[data-f="' + qid + '"]');
+      grp.querySelectorAll(".chip").forEach(function (c) { c.remove(); });
+      var opts = Q[qid].options.slice(); if (Q[qid].other) opts.push(OTHER);
+      opts.forEach(function (o) {
+        var b = document.createElement("button"); b.className = "chip" + (filters[qid].indexOf(o) >= 0 ? " is-on" : ""); b.textContent = shortLabel(o); b.title = o;
+        b.addEventListener("click", function () { var i = filters[qid].indexOf(o); if (i >= 0) filters[qid].splice(i, 1); else filters[qid].push(o); b.classList.toggle("is-on"); applyFilters(); });
+        grp.appendChild(b);
+      });
+    });
+  }
+  function shortLabel(o) { return o.replace(/（.*?）/g, "").replace(/\(.*?\)/g, ""); }
+  function applyFilters() {
+    shown = all.filter(function (r) { return Object.keys(filters).every(function (qid) { return !filters[qid].length || filters[qid].indexOf(r.answers[qid]) >= 0; }); });
+    $("nShown").textContent = shown.length; $("nAll").textContent = all.length;
+    $("filters").hidden = !all.length; $("empty").hidden = !!all.length; $("content").hidden = !all.length;
+    if (all.length) renderAll();
+  }
+  $("clearFilters").addEventListener("click", function () { Object.keys(filters).forEach(function (k) { filters[k] = []; }); buildFilterChips(); applyFilters(); });
+
+  // ---------- aggregation helpers ----------
+  function countSingle(qid) {
+    var q = Q[qid], opts = (q.options || []).slice(); if (q.other) opts.push(OTHER);
+    var m = {}; opts.forEach(function (o) { m[o] = 0; }); var n = 0;
+    shown.forEach(function (r) { var v = r.answers[qid]; if (v === undefined || v === null || v === "") return; n++; if (!(v in m)) m[v] = 0; m[v]++; });
+    return { labels: Object.keys(m), values: Object.keys(m).map(function (k) { return m[k]; }), n: n };
+  }
+  function countMulti(qid, opts) {
+    var q = Q[qid]; opts = opts || (q.options || []).slice(); if (!opts.length || (q.other && opts.indexOf(OTHER) < 0)) opts = opts.concat(q.other ? [OTHER] : []);
+    var m = {}; opts.forEach(function (o) { m[o] = 0; }); var n = 0;
+    shown.forEach(function (r) { var v = r.answers[qid]; if (!Array.isArray(v) || !v.length) return; n++; v.forEach(function (x) { if (!(x in m)) m[x] = 0; m[x]++; }); });
+    var keys = Object.keys(m).sort(function (a, b) { return m[b] - m[a]; });
+    return { labels: keys, values: keys.map(function (k) { return m[k]; }), n: n };
+  }
+  function countQ6() {
+    // Q6 は Q5 の選択肢のどれか（その他は「その他：xxx」の形）
+    var m = {}, n = 0;
+    shown.forEach(function (r) { var v = r.answers.q6; if (!v) return; n++; var k = v.indexOf(OTHER) === 0 ? OTHER : v; m[k] = (m[k] || 0) + 1; });
+    var keys = Object.keys(m).sort(function (a, b) { return m[b] - m[a]; });
+    return { labels: keys, values: keys.map(function (k) { return m[k]; }), n: n };
+  }
+  function texts(qid, withMeta) {
+    var out = [];
+    shown.forEach(function (r) { var v = r.answers[qid]; if (v && String(v).trim()) out.push({ t: String(v).trim(), meta: [r.answers.q0, r.answers.q1, r.answers.q3].filter(Boolean).map(shortLabel).join(" / ") }); });
+    return out;
+  }
+  function otherTexts(qid) {
+    var out = [];
+    shown.forEach(function (r) { var v = r.answers[qid + "_other"]; if (v && String(v).trim()) out.push({ t: String(v).trim(), meta: [r.answers.q0, r.answers.q1].filter(Boolean).map(shortLabel).join(" / ") }); });
+    return out;
+  }
+
+  // ---------- rendering ----------
+  function destroyCharts() { charts.forEach(function (c) { c.destroy(); }); charts = []; }
+  function card(opts) {
+    return '<div class="card' + (opts.wide ? " wide" : "") + '"><h3><span class="qn">' + esc(opts.qn || "") + '</span><span>' + esc(opts.title) + '</span><span class="n">n=' + opts.n + '</span></h3>' + (opts.sub ? '<div class="sub">' + esc(opts.sub) + '</div>' : "") + opts.body + '</div>';
+  }
+  function chartBox(id, h) { return '<div class="chart" style="height:' + h + 'px"><canvas id="' + id + '"></canvas></div>'; }
+  function hbar(id, data, color, isMulti) {
+    var n = data.n || 1;
+    var c = new Chart($(id), {
+      type: "bar",
+      data: { labels: data.labels, datasets: [{ data: data.values, backgroundColor: color || C.teal, borderRadius: 5, barThickness: 16, maxBarThickness: 18 }] },
+      options: {
+        indexAxis: "y", responsive: true, maintainAspectRatio: false, animation: { duration: 350 },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (ctx) { return ctx.parsed.x + "件（" + pct(ctx.parsed.x, n) + "%" + (isMulti ? "の人が選択" : "") + "）"; } } } },
+        scales: { x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "#EEF0F7" } }, y: { grid: { display: false }, ticks: { color: C.ink, autoSkip: false, font: { size: 11.5 }, callback: function (v) { var l = this.getLabelForValue(v); return l.length > 26 ? l.slice(0, 25) + "…" : l; } } } },
+        layout: { padding: { right: 36 } }
+      },
+      plugins: [{ id: "valueLabels", afterDatasetsDraw: function (chart) { var ctx = chart.ctx; ctx.save(); ctx.font = "700 11px 'M PLUS 1p', sans-serif"; ctx.fillStyle = C.soft; ctx.textBaseline = "middle"; chart.getDatasetMeta(0).data.forEach(function (bar, i) { var v = chart.data.datasets[0].data[i]; ctx.fillText(v + " (" + pct(v, n) + "%)", bar.x + 6, bar.y); }); ctx.restore(); } }]
+    });
+    charts.push(c);
+  }
+  function doughnut(id, data) {
+    var c = new Chart($(id), {
+      type: "doughnut",
+      data: { labels: data.labels, datasets: [{ data: data.values, backgroundColor: CAT, borderWidth: 2, borderColor: "#fff" }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: "62%", animation: { duration: 350 }, plugins: { legend: { position: "right", labels: { boxWidth: 10, boxHeight: 10, font: { size: 11.5 }, generateLabels: function (chart) { return chart.data.labels.map(function (l, i) { var v = chart.data.datasets[0].data[i]; return { text: shortLabel(l) + "　" + v + "件 (" + pct(v, data.n) + "%)", fillStyle: CAT[i % CAT.length], strokeStyle: "#fff", index: i, hidden: false }; }); } } }, tooltip: { callbacks: { label: function (ctx) { return ctx.label + ": " + ctx.parsed + "件（" + pct(ctx.parsed, data.n) + "%）"; } } } } }
+    });
+    charts.push(c);
+  }
+  function stacked(id, labels, series, colors, total) {
+    var c = new Chart($(id), {
+      type: "bar",
+      data: { labels: labels, datasets: series.map(function (s, i) { return { label: s.label, data: s.data, backgroundColor: colors[i % colors.length], borderRadius: 3, barThickness: 18 }; }) },
+      options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, animation: { duration: 350 },
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10, font: { size: 11 } } }, tooltip: { callbacks: { label: function (ctx) { var t = total ? total[ctx.dataIndex] : null; return ctx.dataset.label + ": " + ctx.parsed.x + "件" + (t ? "（" + pct(ctx.parsed.x, t) + "%）" : ""); } } } },
+        scales: { x: { stacked: true, beginAtZero: true, ticks: { precision: 0 }, grid: { color: "#EEF0F7" } }, y: { stacked: true, grid: { display: false }, ticks: { color: C.ink, autoSkip: false, font: { size: 11.5 } } } } }
+    });
+    charts.push(c);
+  }
+
+  function renderAll() {
+    destroyCharts();
+    renderKpis();
+    var h = "";
+    // ---- 基本属性
+    h += '<div class="section-title">回答者の属性・状況</div><div class="grid">';
+    var q0 = countSingle("q0"), q1 = countSingle("q1"), q2 = countSingle("q2"), q3 = countSingle("q3"), fac = countSingle("faculty");
+    h += card({ qn: "Q0", title: Q.q0.text, n: q0.n, body: chartBox("c_q0", 200) });
+    h += card({ qn: "", title: "学部の系統（任意回答）", n: fac.n, body: chartBox("c_fac", 30 * fac.labels.length + 30) });
+    h += card({ qn: "Q1", title: Q.q1.text, n: q1.n, body: chartBox("c_q1", 200) });
+    h += card({ qn: "Q2", title: Q.q2.text, n: q2.n, body: chartBox("c_q2", 220) });
+    h += card({ qn: "Q3", title: Q.q3.text, n: q3.n, body: chartBox("c_q3", 200) });
+    h += '</div>';
+    // ---- ブレーキ
+    h += '<div class="section-title">ブレーキになっていること</div><div class="grid">';
+    var q4 = countMulti("q4"), q5 = countMulti("q5"), q6 = countQ6(), q6r = countSingle("q6r");
+    h += card({ qn: "Q4", title: Q.q4.text, n: q4.n, sub: "複数選択。%は回答者のうち選んだ人の割合", body: chartBox("c_q4", 30 * q4.labels.length + 30) });
+    h += card({ qn: "Q5", title: Q.q5.text, n: q5.n, sub: "複数選択。%は回答者のうち選んだ人の割合", body: chartBox("c_q5", 30 * q5.labels.length + 30) });
+    h += card({ qn: "Q6", title: "一番大きいブレーキ", n: q6.n, sub: "Q5で選んだ中から1つ", body: chartBox("c_q6", 30 * Math.max(q6.labels.length, 3) + 30) });
+    h += card({ qn: "Q6", title: Q.q6r.text, n: q6r.n, body: chartBox("c_q6r", 30 * q6r.labels.length + 30) });
+    h += card({ qn: "Q6", title: "補足（自由記述）", n: texts("q6n").length, wide: false, body: textList(texts("q6n").concat(otherTexts("q5").map(function (t) { t.t = "[Q5 その他] " + t.t; return t; })).concat(otherTexts("q6r").map(function (t) { t.t = "[理由 その他] " + t.t; return t; })).concat(otherTexts("q4").map(function (t) { t.t = "[Q4 その他] " + t.t; return t; }))) });
+    h += card({ qn: "Q7", title: "各対策にかけた時間", n: countMatrixN(), sub: "行ごとの内訳（件数）", body: chartBox("c_q7", 36 * Q.q7.rows.length + 60) });
+    h += '</div>';
+    // ---- キャリアセンター
+    h += '<div class="section-title">キャリアセンター</div><div class="grid">';
+    var q8 = countSingle("q8"), q9 = countSingle("q9"), q9r = countMulti("q9r"), q10 = countMulti("q10");
+    h += card({ qn: "Q8", title: Q.q8.text, n: q8.n, body: chartBox("c_q8", 160) });
+    h += card({ qn: "Q9", title: Q.q9.text, n: q9.n, sub: "利用した人のみ", body: chartBox("c_q9", 170) });
+    h += card({ qn: "Q9", title: Q.q9r.text, n: q9r.n, sub: "利用した人のみ・複数選択", body: chartBox("c_q9r", 30 * q9r.labels.length + 30) });
+    h += card({ qn: "Q10", title: Q.q10.text, n: q10.n, sub: "利用していない人のみ・複数選択", body: chartBox("c_q10", 30 * q10.labels.length + 30) });
+    var cc = otherTexts("q9r").map(function (t) { t.t = "[利用者 その他] " + t.t; return t; }).concat(otherTexts("q10").map(function (t) { t.t = "[未利用 その他] " + t.t; return t; }));
+    if (cc.length) h += card({ qn: "Q9-10", title: "その他（自由記述）", n: cc.length, wide: true, body: textList(cc) });
+    h += '</div>';
+    // ---- サービス
+    h += '<div class="section-title">就活サービスの評価</div><div class="grid">';
+    var svc = aggServices();
+    h += card({ qn: "Q11", title: "サービス別の満足度", n: svc.n, sub: "平均点（5段階）と点数の分布。" + svc.none + "人が「使っていない」", wide: true, body: svcTable(svc) });
+    h += card({ qn: "Q11", title: "評価の理由（自由記述）", n: svc.reasons.length, wide: true, body: textList(svc.reasons) });
+    var q12 = countMulti("q12");
+    h += card({ qn: "Q12", title: Q.q12.text, n: q12.n, sub: "複数選択。%は回答者のうち選んだ人の割合", wide: true, body: chartBox("c_q12", 28 * q12.labels.length + 30) });
+    h += '</div>';
+    // ---- サポート
+    h += '<div class="section-title">ほしいサポート</div><div class="grid">';
+    var q13 = countMulti("q13");
+    h += card({ qn: "Q13", title: Q.q13.text, n: q13.n, sub: "複数選択。%は回答者のうち選んだ人の割合", body: chartBox("c_q13", 30 * q13.labels.length + 30) });
+    h += card({ qn: "Q13", title: "自由記述", n: texts("q13n").length + otherTexts("q13").length + otherTexts("q12").length, body: textList(texts("q13n").concat(otherTexts("q13").map(function (t) { t.t = "[Q13 その他] " + t.t; return t; })).concat(otherTexts("q12").map(function (t) { t.t = "[Q12 その他] " + t.t; return t; }))) });
+    h += '</div>';
+    // ---- クロス集計
+    h += '<div class="section-title">クロス集計</div><div class="grid">';
+    h += card({ qn: "×", title: "属性別に見る", n: shown.length, wide: true, body: '<div class="cross-ctl"><select id="crossX">' + crossOpts(["q0", "faculty", "q1", "q2", "q3", "q8"], "q1") + '</select><span>×</span><select id="crossY">' + crossOpts(["q3", "q4", "q5", "q6r", "q1", "q2", "q8", "q9", "q10", "q12", "q13"], "q5") + '</select></div>' + chartBox("c_cross", 320) + '<div class="legend-note">横軸＝件数。複数選択の設問は「選んだ人の数」で数えます。</div>' });
+    h += '</div>';
+    // ---- 一覧
+    h += '<div class="section-title">回答一覧</div>';
+    h += card({ qn: "", title: "最近の回答", n: shown.length, wide: true, body: recentTable() });
+
+    $("sections").innerHTML = h;
+
+    hbar("c_q0", q0); hbar("c_fac", fac, C.blue); hbar("c_q1", q1, C.navy); hbar("c_q2", q2, C.blue); doughnut("c_q3", q3);
+    hbar("c_q4", q4, C.teal, true); hbar("c_q5", q5, C.navy, true); hbar("c_q6", q6, "#D1495B"); hbar("c_q6r", q6r, C.blue);
+    renderMatrix("c_q7");
+    doughnut("c_q8", q8); hbar("c_q9", q9, C.teal); hbar("c_q9r", q9r, C.teal, true); hbar("c_q10", q10, C.navy, true);
+    hbar("c_q12", q12, C.teal, true); hbar("c_q13", q13, C.navy, true);
+    var cx = $("crossX"), cy = $("crossY");
+    var crossChart = null;
+    function drawCross() { if (crossChart) { crossChart.destroy(); charts = charts.filter(function (c) { return c !== crossChart; }); } crossChart = renderCross("c_cross", cx.value, cy.value); }
+    cx.addEventListener("change", drawCross); cy.addEventListener("change", drawCross); drawCross();
+  }
+  function crossOpts(ids, sel) { return ids.map(function (id) { var q = Q[id]; var lbl = (/^q\d+/.exec(id) ? "Q" + /^q(\d+)/.exec(id)[1] + " " : "") + (id === "q6r" ? "一番のブレーキの理由" : id === "faculty" ? "学部の系統" : q.text.replace(/[？。].*$/, "")); return '<option value="' + id + '"' + (id === sel ? " selected" : "") + '>' + esc(lbl.length > 30 ? lbl.slice(0, 29) + "…" : lbl) + '</option>'; }).join(""); }
+
+  function renderKpis() {
+    var n = shown.length;
+    var anxious = shown.filter(function (r) { return ["焦っている", "もっとできたと後悔している", "なんとなく不安だが動けていない"].indexOf(r.answers.q3) >= 0; }).length;
+    var stuck = shown.filter(function (r) { return Array.isArray(r.answers.q5) && r.answers.q5.indexOf("何から始めればいいかわからない") >= 0; }).length;
+    var cc = shown.filter(function (r) { return r.answers.q8 === "ある"; }).length;
+    var svc = aggServices();
+    var latest = shown.length ? new Date(shown[0].submittedAt || shown[0].receivedAt) : null;
+    $("kpis").innerHTML =
+      kpi("回答数", n, "件", latest ? "最新 " + latest.toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "") +
+      kpi("焦り・後悔・不安がある", pct(anxious, n), "%", anxious + "人 / " + n + "人") +
+      kpi("「何から始めればいいか分からない」", pct(stuck, n), "%", stuck + "人がブレーキとして選択") +
+      kpi("キャリアセンター利用率", pct(cc, n), "%", cc + "人が利用経験あり") +
+      kpi("就活サービス平均満足度", svc.avgAll ? svc.avgAll.toFixed(2) : "–", "/5", svc.ratings + "件の評価");
+  }
+  function kpi(l, v, unit, s) { return '<div class="kpi"><div class="l">' + esc(l) + '</div><div class="v">' + esc(v) + '<small>' + esc(unit) + '</small></div><div class="s">' + esc(s) + '</div></div>'; }
+
+  function countMatrixN() { return shown.filter(function (r) { return r.answers.q7 && Object.keys(r.answers.q7).length; }).length; }
+  function renderMatrix(id) {
+    var q = Q.q7; var series = q.cols.map(function (c) { return { label: c, data: q.rows.map(function (r) { return shown.filter(function (x) { return x.answers.q7 && x.answers.q7[r] === c; }).length; }) }; });
+    var totals = q.rows.map(function (r) { return shown.filter(function (x) { return x.answers.q7 && x.answers.q7[r]; }).length; });
+    stacked(id, q.rows, series, SEQ, totals);
+  }
+  function aggServices() {
+    var m = {}, reasons = [], none = 0, n = 0, sum = 0, cnt = 0;
+    shown.forEach(function (r) {
+      var v = r.answers.q11; if (!v) return; n++;
+      if (v.none) { none++; return; }
+      (v.items || []).forEach(function (it) {
+        if (!it.name) return; var name = it.name === OTHER ? (it.nameOther || OTHER).trim() : it.name;
+        if (!m[name]) m[name] = { name: name, n: 0, sum: 0, dist: [0, 0, 0, 0, 0] };
+        var s = parseInt(it.score, 10); if (s >= 1 && s <= 5) { m[name].n++; m[name].sum += s; m[name].dist[s - 1]++; sum += s; cnt++; }
+        if (it.reason && it.reason.trim()) reasons.push({ t: it.reason.trim(), meta: name + "（" + (s || "-") + "点）" + (r.answers.q0 ? " / " + shortLabel(r.answers.q0) : "") });
+      });
+    });
+    var list = Object.keys(m).map(function (k) { return m[k]; }).filter(function (x) { return x.n; }).sort(function (a, b) { return b.n - a.n || b.sum / b.n - a.sum / a.n; });
+    return { list: list, reasons: reasons, none: none, n: n, avgAll: cnt ? sum / cnt : 0, ratings: cnt };
+  }
+  function svcTable(svc) {
+    if (!svc.list.length) return '<ul class="texts"><li class="empty">評価データがありません</li></ul>';
+    var h = '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>サービス</th><th class="num">評価数</th><th class="num">平均</th><th>分布（1→5）</th><th class="num">満足(4-5)</th></tr></thead><tbody>';
+    svc.list.forEach(function (s) {
+      var avg = s.sum / s.n; var good = s.dist[3] + s.dist[4];
+      h += '<tr><td>' + esc(s.name) + '</td><td class="num">' + s.n + '</td><td class="num"><span class="score">' + avg.toFixed(2) + '</span></td><td><span class="dist">' + s.dist.map(function (d, i) { return '<i style="width:' + (d / s.n * 100) + '%;background:' + ["#D1495B", "#F2A65A", "#C9CFE0", "#8FA8FF", "#17A6A0"][i] + '" title="' + (i + 1) + '点: ' + d + '件"></i>'; }).join("") + '</span></td><td class="num">' + pct(good, s.n) + '%</td></tr>';
+    });
+    return h + '</tbody></table></div>';
+  }
+  function textList(items) {
+    if (!items.length) return '<ul class="texts"><li class="empty">記述はありません</li></ul>';
+    return '<ul class="texts">' + items.map(function (it) { return '<li>' + esc(it.t) + (it.meta ? '<span class="m">' + esc(it.meta) + '</span>' : "") + '</li>'; }).join("") + '</ul>';
+  }
+  function renderCross(id, xq, yq) {
+    var X = Q[xq], Y = Q[yq];
+    var xs = X.options.slice(); if (X.other) xs.push(OTHER);
+    var ys = Y.type === "multi" ? countMulti(yq).labels : (function () { var o = (Y.options || []).slice(); if (Y.other) o.push(OTHER); return o; })();
+    var series = xs.map(function (xv) {
+      var rows = shown.filter(function (r) { return r.answers[xq] === xv; });
+      return { label: shortLabel(xv), data: ys.map(function (yv) { return rows.filter(function (r) { var v = r.answers[yq]; return Array.isArray(v) ? v.indexOf(yv) >= 0 : v === yv; }).length; }) };
+    }).filter(function (s) { return s.data.some(function (d) { return d; }); });
+    var totals = ys.map(function (yv, i) { return series.reduce(function (a, s) { return a + s.data[i]; }, 0); });
+    stacked(id, ys.map(shortLabel), series, CAT, totals);
+    return charts[charts.length - 1];
+  }
+  function recentTable() {
+    var rows = shown.slice(0, 50);
+    var h = '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>日時</th><th>学年</th><th>学部</th><th>進捗</th><th>気持ち</th><th>一番のブレーキ</th><th>キャリセン</th><th>サービス</th></tr></thead><tbody>';
+    rows.forEach(function (r) {
+      var a = r.answers; var d = new Date(r.submittedAt || r.receivedAt);
+      var svc = a.q11 ? (a.q11.none ? "なし" : (a.q11.items || []).map(function (it) { return (it.name === OTHER ? it.nameOther : it.name) + "(" + it.score + ")"; }).join(", ")) : "";
+      h += '<tr><td style="white-space:nowrap">' + (isNaN(d) ? "" : d.toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })) + '</td><td>' + esc(a.q0 === OTHER ? "その他:" + (a.q0_other || "") : a.q0 || "") + '</td><td>' + esc(a.faculty === OTHER ? "その他:" + (a.faculty_other || "") : a.faculty || "") + '</td><td>' + esc(shortLabel(a.q1 || "")) + '</td><td>' + esc(a.q3 || "") + '</td><td>' + esc(a.q6 || "") + '</td><td>' + esc(a.q8 || "") + '</td><td>' + esc(svc) + '</td></tr>';
+    });
+    h += '</tbody></table></div>' + (shown.length > 50 ? '<div class="legend-note">最新50件を表示。全件はCSVで保存できます。</div>' : "");
+    return h;
+  }
+
+  // ---------- CSV export ----------
+  function toCSV(rows) {
+    var cols = ["id", "submittedAt"].concat(S.questions.map(function (q) { return q.id; }));
+    var others = S.questions.filter(function (q) { return q.other; }).map(function (q) { return q.id + "_other"; });
+    cols = cols.concat(others);
+    var lines = [cols.join(",")];
+    rows.forEach(function (r) {
+      var a = r.answers;
+      lines.push(cols.map(function (c) {
+        var v = c === "id" ? r.id : c === "submittedAt" ? r.submittedAt : a[c];
+        if (v === undefined || v === null) v = "";
+        else if (Array.isArray(v)) v = v.join(" | ");
+        else if (typeof v === "object") v = v.items ? (v.none ? "（使っていない）" : v.items.map(function (it) { return (it.name === OTHER ? it.nameOther : it.name) + "(" + it.score + ")" + (it.reason ? ": " + it.reason : ""); }).join(" | ")) : Object.keys(v).map(function (k) { return k + ": " + v[k]; }).join(" | ");
+        v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+      }).join(","));
+    });
+    return "﻿" + lines.join("\n");
+  }
+  $("exportBtn").addEventListener("click", function () {
+    if (!shown.length) { toast("データがありません"); return; }
+    var blob = new Blob([toCSV(shown)], { type: "text/csv;charset=utf-8" }); var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "shukatsu-survey-" + new Date().toISOString().slice(0, 10) + ".csv"; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+
+  // ---------- settings / sample / file ----------
+  $("toggleSettings").addEventListener("click", function () { $("settings").hidden = !$("settings").hidden; });
+  $("epInput").value = get(LS.ep) || CFG.endpoint || ""; $("keyInput").value = get(LS.key);
+  $("saveSettings").addEventListener("click", function () { set(LS.ep, $("epInput").value.trim()); set(LS.key, $("keyInput").value.trim()); load().then(function (ok) { if (ok) { $("settings").hidden = true; toast("読み込みました"); } }); });
+  $("refreshBtn").addEventListener("click", function () { if (isSample) { toast("サンプル表示中です。設定から接続してください"); return; } load().then(function (ok) { if (!ok && !all.length) $("settings").hidden = false; }); });
+  $("loadSample").addEventListener("click", function () { isSample = true; $("sampleBanner").hidden = false; $("status").textContent = "サンプル"; setData(makeSample(60)); $("settings").hidden = true; });
+  $("loadFile").addEventListener("click", function () { $("fileInput").click(); });
+  $("fileInput").addEventListener("change", function () {
+    var f = this.files[0]; if (!f) return; var rd = new FileReader();
+    rd.onload = function () {
+      try {
+        var txt = rd.result, rows;
+        if (/\.json$/i.test(f.name)) { var j = JSON.parse(txt); rows = Array.isArray(j) ? j : (j.responses || []); }
+        else { rows = parseSheetCSV(txt); }
+        isSample = false; $("sampleBanner").hidden = true; $("status").textContent = f.name; setData(rows); $("settings").hidden = true; toast(rows.length + "件を読み込みました");
+      } catch (e) { toast("読み込めませんでした：" + e.message); }
+    };
+    rd.readAsText(f);
+  });
+  // スプレッドシートを「CSVでダウンロード」したファイル（raw_json列を使う）
+  function parseSheetCSV(txt) {
+    var rows = [], cur = [], field = "", inQ = false;
+    for (var i = 0; i < txt.length; i++) { var ch = txt[i];
+      if (inQ) { if (ch === '"') { if (txt[i + 1] === '"') { field += '"'; i++; } else inQ = false; } else field += ch; }
+      else if (ch === '"') inQ = true; else if (ch === ",") { cur.push(field); field = ""; } else if (ch === "\n" || ch === "\r") { if (ch === "\r" && txt[i + 1] === "\n") i++; cur.push(field); rows.push(cur); cur = []; field = ""; } else field += ch; }
+    if (field || cur.length) { cur.push(field); rows.push(cur); }
+    var head = rows.shift().map(function (h) { return h.replace(/^﻿/, ""); }); var ri = head.indexOf("raw_json"); if (ri < 0) throw new Error("raw_json 列が見つかりません");
+    return rows.filter(function (r) { return r[ri]; }).map(function (r) { try { return JSON.parse(r[ri]); } catch (e) { return null; } }).filter(Boolean);
+  }
+
+  // ---------- sample data（架空） ----------
+  function makeSample(n) {
+    var seed = 7; function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    function pick(arr, w) { if (!w) return arr[Math.floor(rnd() * arr.length)]; var t = w.reduce(function (a, b) { return a + b; }, 0), x = rnd() * t; for (var i = 0; i < arr.length; i++) { x -= w[i]; if (x <= 0) return arr[i]; } return arr[arr.length - 1]; }
+    function some(arr, p) { var o = arr.filter(function () { return rnd() < p; }); return o.length ? o : [arr[Math.floor(rnd() * arr.length)]]; }
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var a = {};
+      a.q0 = pick(Q.q0.options, [1, 6, 4, 1, 1]); if (rnd() < 0.8) a.faculty = pick(Q.faculty.options, [3, 2, 5, 2, 1, 4, 1, 1, 1]); a.q1 = pick(Q.q1.options, [2, 5, 4, 2]); a.q2 = pick(Q.q2.options, [1, 3, 4, 3, 2, 2]); a.q3 = pick(Q.q3.options, [4, 2, 5, 2, 1]);
+      a.q4 = some(Q.q4.options.slice(0, 10), 0.3); a.q5 = some(Q.q5.options, 0.4); a.q6 = pick(a.q5); a.q6r = pick(Q.q6r.options);
+      if (rnd() < 0.3) a.q6n = pick(["バイトと授業で平日はほぼ動けない", "何を調べればいいかすら分からない", "周りが動いてないと本当に焦らない", "自己分析って何をすれば終わりなのか分からない", "面接が怖くて応募自体を先延ばしにしている"]);
+      a.q7 = {}; Q.q7.rows.forEach(function (r) { a.q7[r] = pick(Q.q7.cols, [4, 4, 2, 1]); });
+      a.q8 = pick(Q.q8.options, [2, 3]);
+      if (a.q8 === "ある") { a.q9 = pick(Q.q9.options, [1, 4, 3, 1]); a.q9r = some(Q.q9r.options, 0.3); } else { a.q10 = some(Q.q10.options, 0.3); }
+      var none = rnd() < 0.12; a.q11 = { none: none, items: [] };
+      if (!none) { var k = 1 + Math.floor(rnd() * 3); for (var j = 0; j < k; j++) { var nm = pick(Q.q11.services.slice(0, 9), [8, 8, 5, 2, 4, 3, 3, 4, 2]); a.q11.items.push({ name: nm, score: pick([1, 2, 3, 4, 5], [1, 2, 5, 5, 2]), reason: pick(["情報量は多いが使いこなせなかった", "通知が多すぎる", "口コミが参考になった", "UIが古い", "求人検索が便利", "登録だけして開いていない", ""]) }); } }
+      a.q12 = some(Q.q12.options, 0.25); a.q13 = some(Q.q13.options, 0.3);
+      if (rnd() < 0.25) a.q13n = pick(["締切を勝手に管理してほしい", "同じ学部の先輩の体験談が見たい", "とにかく短時間でできるもの", "LINEで完結してほしい"]);
+      var d = new Date(Date.now() - Math.floor(rnd() * 20) * 86400000 - Math.floor(rnd() * 86400000));
+      out.push({ id: "sample_" + i, submittedAt: d.toISOString(), answers: a, meta: {} });
+    }
+    return out;
+  }
+
+  // ---------- boot ----------
+  if (endpoint() && get(LS.key)) load().then(function (ok) { if (!ok) $("settings").hidden = false; });
+  else $("settings").hidden = false;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<title>就活に関するアンケート | 就活ナビ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light only;
+    --navy: #1B2A5E; --navy-deep: #101A3D; --navy-pale: #EAEEFB;
+    --teal: #17A6A0; --teal-pale: #E4F7F6; --teal-ink: #0E6F6B;
+    --ink: #172033; --ink-soft: #5B6478; --ink-faint: #8A93A8;
+    --bg: #F4F6FB; --white: #fff; --line: #E1E5F0; --danger: #D1495B; --danger-pale: #FBE9EC;
+    --font-display: 'M PLUS 1p', sans-serif; --font-body: 'Noto Sans JP', sans-serif;
+    --radius: 14px; --ease: cubic-bezier(.22,.61,.36,1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--font-body); line-height: 1.75; font-size: 15px; padding-bottom: 120px; }
+  a { color: var(--teal-ink); }
+  button { font-family: inherit; }
+
+  .topbar { background: var(--navy-deep); color: #fff; }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .topbar .logo { font-family: var(--font-display); font-weight: 900; font-size: 16px; }
+  .topbar .tag { font-size: 11.5px; color: #9FB0F0; font-family: var(--font-display); font-weight: 700; letter-spacing: .08em; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+
+  /* progress */
+  .progress { position: sticky; top: 0; z-index: 20; background: rgba(244,246,251,.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .progress .wrap { padding-block: 12px 10px; }
+  .progress-bar { height: 6px; background: #E6E9F3; border-radius: 6px; overflow: hidden; }
+  .progress-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--teal), #3E5AC7); border-radius: 6px; transition: width .5s var(--ease); }
+  .progress-meta { display: flex; justify-content: space-between; font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; }
+  .progress-meta b { color: var(--navy); }
+
+  /* intro */
+  .intro { padding-block: 36px 8px; }
+  .intro h1 { font-family: var(--font-display); font-size: clamp(24px, 5vw, 32px); font-weight: 900; color: var(--navy); line-height: 1.4; margin-bottom: 16px; text-wrap: balance; }
+  .intro p { color: var(--ink-soft); margin-bottom: 12px; font-size: 14.5px; }
+  .intro .meta { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0 22px; }
+  .intro .meta span { font-family: var(--font-display); font-size: 12px; font-weight: 700; background: var(--white); border: 1px solid var(--line); padding: 6px 12px; border-radius: 999px; color: var(--navy); }
+
+  /* step */
+  .step { display: none; padding-block: 28px 12px; animation: fade .45s var(--ease); }
+  .step.is-on { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .step-head { margin-bottom: 22px; }
+  .step-head .kicker { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: .14em; color: var(--teal-ink); }
+  .step-head h2 { font-family: var(--font-display); font-size: 22px; font-weight: 900; color: var(--navy); line-height: 1.4; }
+  .step-head p { color: var(--ink-soft); font-size: 14px; }
+
+  .q { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 22px 20px; margin-bottom: 16px; scroll-margin-top: 90px; transition: border-color .3s, box-shadow .3s; }
+  .q.is-error { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-pale); }
+  .q[hidden] { display: none; }
+  .q-num { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; color: var(--teal-ink); letter-spacing: .1em; margin-bottom: 4px; }
+  .q-text { font-family: var(--font-display); font-weight: 700; font-size: 16px; line-height: 1.55; color: var(--ink); }
+  .q-text .req { color: var(--danger); font-size: 12px; margin-left: 6px; vertical-align: top; }
+  .q-note { font-size: 12.5px; color: var(--ink-faint); margin-top: 4px; }
+  .q-body { margin-top: 14px; }
+  .q-err { display: none; font-size: 12.5px; color: var(--danger); margin-top: 10px; font-weight: 500; }
+  .q.is-error .q-err { display: block; }
+
+  /* options */
+  .opts { display: flex; flex-direction: column; gap: 8px; }
+  .opts.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .opt { position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 10px; background: #FBFCFE; cursor: pointer; font-size: 14.5px; line-height: 1.5; transition: border-color .15s, background .15s; user-select: none; }
+  .opt:hover { border-color: #B9C3E6; }
+  .opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .opt .mark { flex-shrink: 0; width: 20px; height: 20px; border: 1.5px solid #B9C3E6; background: #fff; margin-top: 2px; display: grid; place-items: center; transition: all .15s; }
+  .opt.radio .mark { border-radius: 50%; }
+  .opt.check .mark { border-radius: 6px; }
+  .opt .mark::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #fff; transform: scale(0); transition: transform .15s; }
+  .opt.check .mark::after { width: 6px; height: 10px; border-radius: 0; border: solid #fff; border-width: 0 2.5px 2.5px 0; background: none; transform: rotate(45deg) scale(0); margin-top: -3px; }
+  .opt.is-on { border-color: var(--teal); background: var(--teal-pale); }
+  .opt.is-on .mark { background: var(--teal); border-color: var(--teal); }
+  .opt.radio.is-on .mark::after { transform: scale(1); }
+  .opt.check.is-on .mark::after { transform: rotate(45deg) scale(1); }
+  .opt input:focus-visible ~ .mark { outline: 2px solid var(--navy); outline-offset: 2px; }
+  .other-wrap { margin-top: 8px; display: none; }
+  .other-wrap.is-on { display: block; }
+  .field { width: 100%; font: inherit; font-size: 14.5px; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); transition: border-color .15s, box-shadow .15s; }
+  .field:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-pale); }
+  textarea.field { min-height: 88px; resize: vertical; }
+  select.field { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%235B6478' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+  /* matrix */
+  .matrix-wrap { overflow-x: auto; margin: 0 -22px; padding: 0 22px; }
+  table.matrix { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 560px; font-size: 13.5px; }
+  table.matrix th, table.matrix td { padding: 8px 6px; text-align: center; vertical-align: middle; }
+  table.matrix thead th { font-family: var(--font-display); font-weight: 700; font-size: 11.5px; color: var(--ink-soft); line-height: 1.3; padding-bottom: 10px; }
+  table.matrix tbody th { text-align: left; font-weight: 700; color: var(--ink); white-space: nowrap; padding-left: 0; }
+  table.matrix tbody tr { transition: background .15s; }
+  table.matrix tbody tr:nth-child(odd) td, table.matrix tbody tr:nth-child(odd) th { background: #F7F8FC; }
+  table.matrix tbody tr.is-missing th { color: var(--danger); }
+  table.matrix td label { display: grid; place-items: center; width: 100%; height: 36px; cursor: pointer; }
+  table.matrix td input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  table.matrix td .dot { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #B9C3E6; background: #fff; display: grid; place-items: center; transition: all .15s; }
+  table.matrix td .dot::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #fff; transform: scale(0); transition: transform .15s; }
+  table.matrix td input:checked + .dot { background: var(--teal); border-color: var(--teal); }
+  table.matrix td input:checked + .dot::after { transform: scale(1); }
+  table.matrix td input:focus-visible + .dot { outline: 2px solid var(--navy); outline-offset: 2px; }
+  .matrix-mobile-hint { font-size: 12px; color: var(--ink-faint); margin-bottom: 6px; display: none; }
+  @media (max-width: 640px) { .matrix-mobile-hint { display: block; } }
+
+  /* services */
+  .svc-list { display: flex; flex-direction: column; gap: 12px; }
+  .svc { border: 1.5px solid var(--line); border-radius: 12px; padding: 14px; background: #FBFCFE; display: grid; grid-template-columns: 1fr 150px; gap: 10px; position: relative; }
+  .svc .full { grid-column: 1 / -1; }
+  .svc .rm { position: absolute; top: -10px; right: -8px; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink-soft); cursor: pointer; font-size: 14px; line-height: 1; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(20,30,80,.1); }
+  .svc .rm:hover { color: var(--danger); border-color: var(--danger); }
+  .svc label.lbl { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; color: var(--ink-soft); display: block; margin-bottom: 4px; }
+  .svc-add { margin-top: 10px; font-family: var(--font-display); font-weight: 700; font-size: 13.5px; color: var(--navy); background: var(--navy-pale); border: none; border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+  .svc-add:hover { background: #DDE3F7; }
+  .svc-none { margin-top: 12px; }
+  .svc-list.is-disabled { opacity: .45; pointer-events: none; }
+  @media (max-width: 520px) { .svc { grid-template-columns: 1fr; } }
+
+  /* footer nav */
+  .navbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: rgba(255,255,255,.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--line); padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .navbar .wrap { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .btn { font-family: var(--font-display); font-weight: 700; font-size: 15px; padding: 13px 26px; border-radius: 10px; border: 1.5px solid transparent; cursor: pointer; transition: transform .15s, background .15s, box-shadow .15s; }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--navy); color: #fff; box-shadow: 0 8px 20px rgba(27,42,94,.22); }
+  .btn-primary:hover { background: #24378A; }
+  .btn-primary:disabled { opacity: .6; cursor: progress; }
+  .btn-ghost { background: transparent; color: var(--ink-soft); border-color: var(--line); }
+  .btn-ghost:hover { color: var(--navy); border-color: #B9C3E6; }
+  .btn-ghost[hidden] { display: none; }
+  .btn-start { width: 100%; padding: 16px; font-size: 16px; background: var(--teal); box-shadow: 0 10px 24px rgba(23,166,160,.3); }
+  .btn-start:hover { background: #12908B; }
+  .btn-submit { background: var(--teal); box-shadow: 0 8px 20px rgba(23,166,160,.3); }
+  .btn-submit:hover { background: #12908B; }
+  .nav-status { font-size: 12px; color: var(--ink-faint); text-align: center; flex: 1; }
+
+  /* done */
+  .done { display: none; padding-block: 48px 20px; text-align: center; animation: fade .5s var(--ease); }
+  .done.is-on { display: block; }
+  .done .ok { width: 72px; height: 72px; border-radius: 50%; background: var(--teal-pale); color: var(--teal); display: grid; place-items: center; margin: 0 auto 20px; font-size: 32px; }
+  .done h2 { font-family: var(--font-display); font-size: 24px; font-weight: 900; color: var(--navy); margin-bottom: 12px; }
+  .done p { color: var(--ink-soft); max-width: 520px; margin: 0 auto 22px; font-size: 14.5px; }
+  .done .app { display: inline-flex; align-items: center; gap: 10px; background: var(--navy-deep); color: #fff; text-decoration: none; font-family: var(--font-display); font-weight: 700; padding: 14px 24px; border-radius: 12px; box-shadow: 0 10px 24px rgba(16,26,61,.3); }
+  .done .app:hover { background: var(--navy); }
+
+  .toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%) translateY(10px); background: var(--navy-deep); color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 13.5px; opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s; z-index: 40; max-width: calc(100% - 40px); text-align: center; }
+  .toast.is-on { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.err { background: var(--danger); }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap"><div class="logo">就活ナビ</div><div class="tag">SURVEY 2026</div></div></div>
+
+<div class="progress" id="progress" hidden>
+  <div class="wrap">
+    <div class="progress-meta"><span><b id="pStep">1</b> / <span id="pTotal">6</span>　<span id="pTitle"></span></span><span id="pPct">0%</span></div>
+    <div class="progress-bar"><i id="pBar"></i></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section class="intro" id="intro">
+    <h1 id="introTitle"></h1>
+    <div id="introBody"></div>
+    <div class="meta"><span>所要時間 5〜8分</span><span>回答は非公開</span><span>途中の回答はこの端末に自動保存</span></div>
+    <button class="btn btn-primary btn-start" id="startBtn">アンケートに答える</button>
+  </section>
+
+  <form id="form" novalidate autocomplete="off"></form>
+
+  <section class="done" id="done">
+    <div class="ok">✓</div>
+    <h2 id="doneTitle"></h2>
+    <p id="doneBody"></p>
+    <a class="app" id="doneCta" href="#" target="_blank" rel="noopener"></a>
+  </section>
+</main>
+
+<div class="navbar" id="navbar" hidden>
+  <div class="wrap">
+    <button type="button" class="btn btn-ghost" id="backBtn">戻る</button>
+    <div class="nav-status" id="navStatus"></div>
+    <button type="button" class="btn btn-primary" id="nextBtn">次へ</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="questions.js"></script>
+<script>
+(function () {
+  var S = window.SURVEY_SCHEMA, CFG = window.SURVEY_CONFIG || {};
+  var OTHER = "その他";
+  var DRAFT_KEY = "shukatsu-survey-draft-v1";
+  var answers = loadDraft();
+  var stepIdx = -1;
+  var els = {};
+  ["progress","pStep","pTotal","pTitle","pPct","pBar","intro","introTitle","introBody","startBtn","form","done","doneTitle","doneBody","doneCta","navbar","backBtn","nextBtn","navStatus","toast"].forEach(function (id) { els[id] = document.getElementById(id); });
+
+  function loadDraft() { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}") || {}; } catch (e) { return {}; } }
+  function saveDraft() { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(answers)); } catch (e) {} }
+  function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function qnum(q) { var m = /^q(\d+)/.exec(q.id); return m ? "Q" + m[1] : ""; }
+  var toastTimer;
+  function toast(msg, isErr) { els.toast.textContent = msg; els.toast.className = "toast is-on" + (isErr ? " err" : ""); clearTimeout(toastTimer); toastTimer = setTimeout(function () { els.toast.className = "toast"; }, 3200); }
+
+  // ---------- intro ----------
+  els.introTitle.textContent = S.title;
+  els.introBody.innerHTML = S.intro.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("");
+  els.doneTitle.textContent = S.outro.title;
+  els.doneBody.textContent = S.outro.body;
+  els.doneCta.textContent = S.outro.cta;
+  els.doneCta.href = CFG.appStoreUrl || "#";
+  els.pTotal.textContent = S.steps.length;
+
+  // ---------- render ----------
+  function render() {
+    var html = "";
+    S.steps.forEach(function (st, i) {
+      html += '<section class="step" data-step="' + st.id + '">';
+      html += '<div class="step-head"><div class="kicker">STEP ' + (i + 1) + ' / ' + S.steps.length + '</div><h2>' + esc(st.title) + '</h2><p>' + esc(st.lead) + '</p></div>';
+      S.questions.filter(function (q) { return q.step === st.id; }).forEach(function (q) { html += renderQ(q); });
+      html += '</section>';
+    });
+    els.form.innerHTML = html;
+    bind();
+  }
+
+  function renderQ(q) {
+    var h = '<div class="q" id="q-' + q.id + '" data-q="' + q.id + '">';
+    var n = qnum(q);
+    if (n) h += '<div class="q-num">' + n + '</div>';
+    h += '<div class="q-text">' + esc(q.text) + (q.required ? '<span class="req">必須</span>' : '') + '</div>';
+    if (q.note) h += '<div class="q-note">' + esc(q.note) + '</div>';
+    h += '<div class="q-body">';
+    switch (q.type) {
+      case "single":
+      case "multi": h += renderOpts(q, q.options || []); break;
+      case "matrix": h += renderMatrix(q); break;
+      case "services": h += renderServices(q); break;
+      case "text": h += '<textarea class="field" name="' + q.id + '" placeholder="' + esc(q.placeholder || "") + '">' + esc(answers[q.id] || "") + '</textarea>'; break;
+      case "email": h += '<input class="field" type="email" name="' + q.id + '" placeholder="example@example.com" value="' + esc(answers[q.id] || "") + '">'; break;
+    }
+    h += '</div><div class="q-err"></div></div>';
+    return h;
+  }
+
+  function renderOpts(q, options) {
+    var isMulti = q.type === "multi";
+    var cur = answers[q.id];
+    var list = options.slice();
+    if (q.other) list.push(OTHER);
+    var h = '<div class="opts' + (list.length > 6 && !isMulti ? " grid" : "") + '">';
+    list.forEach(function (o, i) {
+      var on = isMulti ? (Array.isArray(cur) && cur.indexOf(o) >= 0) : cur === o;
+      h += '<label class="opt ' + (isMulti ? "check" : "radio") + (on ? " is-on" : "") + '"><input type="' + (isMulti ? "checkbox" : "radio") + '" name="' + q.id + '" value="' + esc(o) + '"' + (on ? " checked" : "") + '><span class="mark"></span><span>' + esc(o) + '</span></label>';
+    });
+    h += '</div>';
+    if (q.other) {
+      var onOther = isMulti ? (Array.isArray(cur) && cur.indexOf(OTHER) >= 0) : cur === OTHER;
+      h += '<div class="other-wrap' + (onOther ? " is-on" : "") + '" data-other-for="' + q.id + '"><input class="field" type="text" name="' + q.id + '_other" placeholder="具体的に教えてください" value="' + esc(answers[q.id + "_other"] || "") + '"></div>';
+    }
+    return h;
+  }
+
+  function renderMatrix(q) {
+    var cur = answers[q.id] || {};
+    var h = '<div class="matrix-mobile-hint">← 横にスクロールできます →</div><div class="matrix-wrap"><table class="matrix"><thead><tr><th></th>';
+    q.cols.forEach(function (c) { h += '<th>' + esc(c) + '</th>'; });
+    h += '</tr></thead><tbody>';
+    q.rows.forEach(function (r) {
+      h += '<tr data-row="' + esc(r) + '"><th>' + esc(r) + '</th>';
+      q.cols.forEach(function (c) {
+        var on = cur[r] === c;
+        h += '<td><label><input type="radio" name="' + q.id + '__' + esc(r) + '" value="' + esc(c) + '"' + (on ? " checked" : "") + '><span class="dot"></span></label></td>';
+      });
+      h += '</tr>';
+    });
+    return h + '</tbody></table></div>';
+  }
+
+  function renderServices(q) {
+    var cur = answers[q.id] || { none: false, items: [] };
+    if (!cur.items || !cur.items.length) cur.items = [{ name: "", nameOther: "", score: "", reason: "" }];
+    answers[q.id] = cur;
+    var h = '<div class="svc-list' + (cur.none ? " is-disabled" : "") + '" id="svcList">';
+    cur.items.forEach(function (it, i) { h += renderSvcRow(q, it, i, cur.items.length); });
+    h += '</div><button type="button" class="svc-add" id="svcAdd">＋ 別のサービスを追加</button>';
+    h += '<div class="svc-none"><label class="opt check' + (cur.none ? " is-on" : "") + '"><input type="checkbox" id="svcNone"' + (cur.none ? " checked" : "") + '><span class="mark"></span><span>' + esc(q.noneLabel) + '</span></label></div>';
+    return h;
+  }
+  function renderSvcRow(q, it, i, total) {
+    var h = '<div class="svc" data-i="' + i + '">';
+    if (total > 1) h += '<button type="button" class="rm" title="削除" data-rm="' + i + '">×</button>';
+    h += '<div><label class="lbl">サービス名</label><select class="field" data-f="name" data-i="' + i + '"><option value="">選択してください</option>';
+    q.services.forEach(function (s) { h += '<option value="' + esc(s) + '"' + (it.name === s ? " selected" : "") + '>' + esc(s) + '</option>'; });
+    h += '<option value="' + OTHER + '"' + (it.name === OTHER ? " selected" : "") + '>その他（自由記述）</option></select></div>';
+    h += '<div><label class="lbl">5段階評価</label><select class="field" data-f="score" data-i="' + i + '"><option value="">選択</option>';
+    q.scores.forEach(function (s) { h += '<option value="' + s[0] + '"' + (String(it.score) === String(s[0]) ? " selected" : "") + '>' + esc(s[1]) + '</option>'; });
+    h += '</select></div>';
+    h += '<div class="full"' + (it.name === OTHER ? "" : " hidden") + ' data-other-row="' + i + '"><label class="lbl">サービス名（その他）</label><input class="field" type="text" data-f="nameOther" data-i="' + i + '" placeholder="サービス名を入力" value="' + esc(it.nameOther || "") + '"></div>';
+    h += '<div class="full"><label class="lbl">評価の理由</label><input class="field" type="text" data-f="reason" data-i="' + i + '" placeholder="例：情報量は多いが使いこなせなかった" value="' + esc(it.reason || "") + '"></div>';
+    return h + '</div>';
+  }
+
+  // ---------- bind ----------
+  function bind() {
+    els.form.addEventListener("change", onChange);
+    els.form.addEventListener("input", onInput);
+    els.form.addEventListener("click", function (e) {
+      var rm = e.target.closest("[data-rm]");
+      if (rm) { var q = byId("q11"); answers.q11.items.splice(+rm.dataset.rm, 1); rerenderQ(q); saveDraft(); return; }
+      if (e.target.id === "svcAdd") { var q2 = byId("q11"); answers.q11.items.push({ name: "", nameOther: "", score: "", reason: "" }); rerenderQ(q2); saveDraft(); var rows = document.querySelectorAll("#svcList .svc"); rows[rows.length - 1].querySelector("select").focus(); }
+    });
+  }
+  function byId(id) { for (var i = 0; i < S.questions.length; i++) if (S.questions[i].id === id) return S.questions[i]; return null; }
+  function rerenderQ(q) { var box = document.getElementById("q-" + q.id); var tmp = document.createElement("div"); tmp.innerHTML = renderQ(q); box.replaceWith(tmp.firstElementChild); }
+
+  function onChange(e) {
+    var t = e.target;
+    var qbox = t.closest(".q"); if (!qbox) return;
+    var q = byId(qbox.dataset.q); if (!q) return;
+    if (q.type === "single") {
+      answers[q.id] = t.value;
+      qbox.querySelectorAll(".opt").forEach(function (l) { l.classList.toggle("is-on", l.querySelector("input").checked); });
+      var ow = qbox.querySelector(".other-wrap"); if (ow) { ow.classList.toggle("is-on", t.value === OTHER); if (t.value === OTHER) ow.querySelector("input").focus(); }
+      if (q.id === "q8") applyConditions();
+      if (q.id === "q5") {}
+    } else if (q.type === "multi") {
+      var vals = []; qbox.querySelectorAll("input[type=checkbox]").forEach(function (c) { c.closest(".opt").classList.toggle("is-on", c.checked); if (c.checked) vals.push(c.value); });
+      answers[q.id] = vals;
+      var ow2 = qbox.querySelector(".other-wrap"); if (ow2) { var on = vals.indexOf(OTHER) >= 0; ow2.classList.toggle("is-on", on); if (on && t.value === OTHER) ow2.querySelector("input").focus(); }
+      if (q.id === "q5") syncQ6();
+    } else if (q.type === "matrix") {
+      var m = answers[q.id] || {}; var row = t.closest("tr").dataset.row; m[row] = t.value; answers[q.id] = m; t.closest("tr").classList.remove("is-missing");
+    } else if (q.type === "services") {
+      if (t.id === "svcNone") { answers.q11.none = t.checked; t.closest(".opt").classList.toggle("is-on", t.checked); document.getElementById("svcList").classList.toggle("is-disabled", t.checked); }
+      else if (t.dataset.f) { var it = answers.q11.items[+t.dataset.i]; it[t.dataset.f] = t.value; if (t.dataset.f === "name") { var orow = qbox.querySelector('[data-other-row="' + t.dataset.i + '"]'); orow.hidden = t.value !== OTHER; if (t.value === OTHER) orow.querySelector("input").focus(); } }
+    }
+    qbox.classList.remove("is-error");
+    saveDraft();
+  }
+  var inputTimer;
+  function onInput(e) {
+    var t = e.target; if (!(t.matches("input[type=text], input[type=email], textarea"))) return;
+    var qbox = t.closest(".q"); var q = byId(qbox.dataset.q);
+    if (t.dataset.f) { answers.q11.items[+t.dataset.i][t.dataset.f] = t.value; }
+    else if (t.name) answers[t.name] = t.value;
+    qbox.classList.remove("is-error");
+    clearTimeout(inputTimer); inputTimer = setTimeout(saveDraft, 300);
+  }
+
+  // Q6: options = Q5 で選んだもの
+  function syncQ6() {
+    var q6 = byId("q6"); var src = answers[q6.from] || [];
+    var opts = src.map(function (v) { return v === OTHER ? (OTHER + (answers[q6.from + "_other"] ? "：" + answers[q6.from + "_other"] : "")) : v; });
+    if (answers.q6 && opts.indexOf(answers.q6) < 0) delete answers.q6;
+    var box = document.getElementById("q-q6"); var body = box.querySelector(".q-body");
+    body.innerHTML = opts.length ? renderOpts({ id: "q6", type: "single" }, opts) : '<div class="q-note">先に上の質問でブレーキになっていることを選んでください。</div>';
+  }
+  function applyConditions() {
+    S.questions.forEach(function (q) {
+      if (!q.showIf) return;
+      var key = Object.keys(q.showIf)[0]; var show = answers[key] === q.showIf[key];
+      var box = document.getElementById("q-" + q.id); box.hidden = !show;
+      if (!show) { box.classList.remove("is-error"); }
+    });
+  }
+
+  // ---------- validation ----------
+  function validateStep(st) {
+    var bad = [];
+    S.questions.filter(function (q) { return q.step === st.id; }).forEach(function (q) {
+      var box = document.getElementById("q-" + q.id);
+      if (box.hidden || !q.required) return;
+      var msg = null, v = answers[q.id];
+      if (q.type === "single") {
+        if (!v) msg = "1つ選んでください。";
+        else if (v === OTHER && !(answers[q.id + "_other"] || "").trim()) msg = "「その他」の内容を入力してください。";
+      } else if (q.type === "multi") {
+        if (!Array.isArray(v) || !v.length) msg = "1つ以上選んでください。";
+        else if (v.indexOf(OTHER) >= 0 && !(answers[q.id + "_other"] || "").trim()) msg = "「その他」の内容を入力してください。";
+      } else if (q.type === "matrix") {
+        var miss = q.rows.filter(function (r) { return !(v && v[r]); });
+        box.querySelectorAll("tbody tr").forEach(function (tr) { tr.classList.toggle("is-missing", miss.indexOf(tr.dataset.row) >= 0); });
+        if (miss.length) msg = "すべての行で1つ選んでください（未選択：" + miss.join("、") + "）";
+      } else if (q.type === "services") {
+        if (!v.none) {
+          var items = v.items || [];
+          var filled = items.filter(function (it) { return it.name; });
+          if (!filled.length) msg = "サービスを1つ以上選ぶか、「使っているサービスはない」にチェックしてください。";
+          else for (var i = 0; i < filled.length; i++) {
+            var it = filled[i];
+            if (it.name === OTHER && !(it.nameOther || "").trim()) { msg = "「その他」のサービス名を入力してください。"; break; }
+            if (!it.score) { msg = "「" + (it.name === OTHER ? it.nameOther : it.name) + "」の評価を選んでください。"; break; }
+          }
+        }
+      } else if (q.type === "text" || q.type === "email") {
+        if (!(v || "").trim()) msg = "入力してください。";
+      }
+      if (q.type === "email" && (v || "").trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())) msg = "メールアドレスの形式を確認してください。";
+      box.classList.toggle("is-error", !!msg);
+      if (msg) { box.querySelector(".q-err").textContent = msg; bad.push(box); }
+    });
+    // email は任意でも形式チェック
+    var em = document.getElementById("q-email");
+    if (em && st.id === "s6") { var ev = (answers.email || "").trim(); var ok = !ev || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ev); em.classList.toggle("is-error", !ok); if (!ok) { em.querySelector(".q-err").textContent = "メールアドレスの形式を確認してください。"; bad.push(em); } }
+    return bad;
+  }
+
+  // ---------- navigation ----------
+  function goStep(i) {
+    stepIdx = i;
+    document.querySelectorAll(".step").forEach(function (s, k) { s.classList.toggle("is-on", k === i); });
+    els.intro.style.display = i < 0 ? "" : "none";
+    els.progress.hidden = i < 0; els.navbar.hidden = i < 0;
+    if (i >= 0) {
+      var st = S.steps[i];
+      els.pStep.textContent = i + 1; els.pTitle.textContent = st.title;
+      var pct = Math.round(i / S.steps.length * 100); els.pPct.textContent = pct + "%"; els.pBar.style.width = pct + "%";
+      els.backBtn.hidden = i === 0;
+      var last = i === S.steps.length - 1;
+      els.nextBtn.textContent = last ? "回答を送信する" : "次へ";
+      els.nextBtn.className = "btn btn-primary" + (last ? " btn-submit" : "");
+      els.navStatus.textContent = "";
+      if (st.id === "s2") syncQ6();
+      if (st.id === "s4") applyConditions();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    try { sessionStorage.setItem("shukatsu-survey-step", String(i)); } catch (e) {}
+  }
+  els.startBtn.addEventListener("click", function () { goStep(0); });
+  els.backBtn.addEventListener("click", function () { if (stepIdx > 0) goStep(stepIdx - 1); });
+  els.nextBtn.addEventListener("click", function () {
+    var bad = validateStep(S.steps[stepIdx]);
+    if (bad.length) { bad[0].scrollIntoView({ behavior: "smooth", block: "start" }); toast("未回答の項目があります", true); return; }
+    if (stepIdx < S.steps.length - 1) goStep(stepIdx + 1); else submit();
+  });
+
+  // ---------- submit ----------
+  function buildPayload() {
+    var a = JSON.parse(JSON.stringify(answers));
+    if (a.q11 && a.q11.items) a.q11.items = a.q11.items.filter(function (it) { return it.name; });
+    // 非表示の条件質問は消す
+    S.questions.forEach(function (q) { if (q.showIf) { var k = Object.keys(q.showIf)[0]; if (a[k] !== q.showIf[k]) { delete a[q.id]; delete a[q.id + "_other"]; } } });
+    return {
+      id: "r_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8),
+      submittedAt: new Date().toISOString(),
+      answers: a,
+      meta: { ua: navigator.userAgent, lang: navigator.language, screen: window.innerWidth + "x" + window.innerHeight, ref: document.referrer || "" }
+    };
+  }
+  function submit() {
+    var payload = buildPayload();
+    if (!CFG.endpoint) {
+      console.warn("SURVEY_CONFIG.endpoint が未設定です。送信内容:", payload);
+      toast("送信先が未設定のため、内容をコンソールに出力しました（テストモード）");
+      finish(); return;
+    }
+    els.nextBtn.disabled = true; els.navStatus.textContent = "送信中…";
+    fetch(CFG.endpoint, { method: "POST", body: JSON.stringify(payload) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (!j || !j.ok) throw new Error(j && j.error || "server"); finish(); })
+      .catch(function (err) { console.error(err); els.nextBtn.disabled = false; els.navStatus.textContent = ""; toast("送信できませんでした。通信環境を確認してもう一度お試しください。", true); });
+  }
+  function finish() {
+    clearDraft(); try { sessionStorage.removeItem("shukatsu-survey-step"); } catch (e) {}
+    els.form.style.display = "none"; els.progress.hidden = true; els.navbar.hidden = true; els.intro.style.display = "none";
+    els.pBar.style.width = "100%";
+    els.done.classList.add("is-on"); window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ---------- boot ----------
+  render();
+  applyConditions();
+  var resume = -1; try { resume = parseInt(sessionStorage.getItem("shukatsu-survey-step") || "-1", 10); } catch (e) {}
+  if (resume >= 0 && Object.keys(answers).length) goStep(Math.min(resume, S.steps.length - 1)); else goStep(-1);
+})();
+</script>
+</body>
+</html>
